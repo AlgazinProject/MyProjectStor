@@ -1,0 +1,91 @@
+@forward 'constants';
+@forward 'functions';
+@forward 'media';
+@forward 'mixins';
+
+
+
+// ========================================================
+// THE ULTIMATE MASTERPIECE: 300PX, PRISM BLUR & LETTER SPIN
+// ========================================================
+.preloader {
+    position: fixed;
+    inset: 0;
+    background-color: #030304; // Абсолютный, поглощающий свет матовый блэкаут
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999; 
+    
+    opacity: 1;
+    visibility: visible;
+    // Тягучее, шёлковое растворение темноты
+    transition: opacity 0.9s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+
+    &__logo-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    &__logo {
+        width: 300px; // ИСПРАВЛЕНО: Монументальный, огромный размер логотипа!
+        height: auto;
+        display: block;
+        z-index: 5;
+        
+        // Превращаем в белый матовый цвет
+        filter: brightness(0) invert(1); 
+        
+        // Запускаем ультимативную комбинацию: расфокус + хроматическая линза + разлёт титров
+        animation: apexLuxuryPrism 1.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    &::after,
+    &__radar-line {
+        display: none !important;
+    }
+
+    &--hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
+// ========================================================
+// МАГИЯ АНИМАЦИИ: ЭФФЕКТ ХРОМАТИЧЕСКОЙ СТЕКЛЯННОЙ ЛИНЗЫ
+// ========================================================
+@keyframes apexLuxuryPrism {
+    0% {
+        opacity: 0;
+        // На старте — глубокий оптический расфокус
+        filter: brightness(0) invert(1) blur(30px);
+        transform: scale(0.9);
+        letter-spacing: -4px; // Буквы сильно сжаты на старте
+        
+        // Создаем эффект призмы: расслаиваем края на красный и синий фантомные контуры
+        text-shadow: -3px 0 0 rgba(255, 77, 79, 0), 3px 0 0 rgba(0, 140, 255, 0);
+    }
+    10% {
+        opacity: 0.2;
+        // На пике расфокуса цветные тени становятся заметны, создавая хроматический блик
+        text-shadow: -8px 0 10px rgba(255, 77, 79, 0.6), 8px 0 10px rgba(0, 140, 255, 0.6);
+    }
+    50% {
+        opacity: 0.8;
+        // Цветные контуры начинают плавно стягиваться к центру по мере наведения резкости
+        text-shadow: -3px 0 4px rgba(255, 77, 79, 0.3), 3px 0 4px rgba(0, 140, 255, 0.3);
+    }
+    100% {
+        opacity: 1;
+        // Кристальная резкость, линза полностью сфокусировалась, тени исчезли, остался чистый белый хром!
+        filter: brightness(0) invert(1) blur(0px) drop-shadow(0 0 25px rgba(255, 255, 255, 0.15));
+        // Величественный вдох вперед
+        transform: scale(1.03);
+        // Дорогой разлёт межстрочного интервала титров
+        letter-spacing: 3px;
+        text-shadow: 0 0 0 rgba(0,0,0,0);
+    }
+}

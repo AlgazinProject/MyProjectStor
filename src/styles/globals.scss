@@ -1,0 +1,30 @@
+body {
+  /* Задаем базовые параметры текста для всего сайта */
+  font-family: var(--font-family-base, 'Inter', sans-serif); 
+  font-size: 16px; /* Твой размер текста по умолчанию */
+  color: var(--color-black, #000000); /* Базовый цвет текста */
+}
+
+input,
+label,
+button {
+  transition-duration: var(--transition-duration);
+}
+
+.container {
+  max-width: 1200px;      /* Максимальная ширина контентной зоны (подставь свою по макету) */
+  margin-inline: auto;    /* Центрирует контейнер по горизонтали (вместо margin: 0 auto) */
+  padding-inline: 15px;   /* Боковые отступы, чтобы на мобилках текст не прилипал к экрану */
+}
+
+// :focus-visible {
+//   outline: 2px dashed var(--color-black);
+//   outline-offset: 4px;
+//   transition-duration: 0s !important;
+// }
+
+
+
+
+
+
