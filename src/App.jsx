@@ -1,91 +1,78 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
-// ИМПОРТЫ КОМПОНЕНТОВ И СТРАНИЦ (Проверь пути, если они у тебя лежали по-другому)
-import Header from './layouts/Header/Header';
-import Footer from './layouts/Footer/Footer';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Header from './layouts/Header';
+import Footer from './layouts/Footer';
 import Product from './pages/Product/Product';
-import ProductPage from './pages/ProductPage/ProductPage';
-import Brand from './pages/Brand/Brand';
 import Favorites from './pages/Favorites/Favorites';
 import Cart from './pages/Cart/Cart';
-
-// ИМПОРТ БАЗЫ ДАННЫХ
-import { productsData } from './data';
+import './styles/helpers/index.scss';
 
 const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Состояния для избранного и корзины с ленивой инициализацией из localStorage
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  // Состояния для корзины и избранного
   const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem('cart');
-    return saved ? JSON.parse(saved) : [];
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+  
+  const [favorites, setFavorites] = useState(() => {
+    const savedFavs = localStorage.getItem('favorites');
+    return savedFavs ? JSON.parse(savedFavs) : [];
   });
 
-  // Наш стейт для плавной загрузки прелоадера
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Таймер прелоадера на 1.5 секунды
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Синхронизация с localStorage
-  useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
+  // Синхронизация с LocalStorage
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
-  // ФУНКЦИИ ИНТЕРАКТИВА (ТВОИ РОДНЫЕ)
-  const toggleFavorite = (id) => {
-    setFavorites(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  // Функции для работы с избранным
+  const toggleFavorite = (product) => {
+    if (favorites.some(fav => fav.id === product.id)) {
+      setFavorites(favorites.filter(fav => fav.id !== product.id));
+    } else {
+      setFavorites([...favorites, product]);
+    }
   };
 
+  // Функции для работы с корзиной
   const addToCart = (product, size) => {
-    setCart(prevCart => {
-      const isExist = prevCart.find(item => item.id === product.id && item.size === size);
-      if (isExist) {
-        return prevCart.map(item => 
-          item.id === product.id && item.size === size 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
-        );
-      }
-      return [...prevCart, { ...product, size, quantity: 1 }];
-    });
+    const numericPrice = typeof product.price === 'number' 
+      ? product.price 
+      : parseInt(product.price.toString().replace(/[^\d]/g, ''), 10) || 0;
+
+    const existingItem = cart.find(item => item.id === product.id && item.size === size);
+
+    if (existingItem) {
+      setCart(cart.map(item => 
+        item.id === product.id && item.size === size 
+          ? { ...item, quantity: item.quantity + 1 } 
+          : item
+      ));
+    } else {
+      setCart([...cart, { ...product, size, quantity: 1, numericPrice }]);
+    }
   };
 
-  const changeQuantity = (id, size, action) => {
-    setCart(prevCart => 
-      prevCart.map(item => {
-        if (item.id === id && item.size === size) {
-          let newQty = action === 'plus' ? item.quantity + 1 : item.quantity - 1;
-          if (newQty < 1) newQty = 1;
-          // Ограничиваем лимит 10 штуками, как мы настраивали
-          if (newQty > 10) newQty = 10;
-          return { ...item, quantity: newQty };
+  const changeQuantity = (id, size, type) => {
+    setCart(cart.map(item => {
+      if (item.id === id && item.size === size) {
+        if (type === 'plus') {
+          return { ...item, quantity: item.quantity + 1 };
+        } else if (type === 'minus' && item.quantity > 1) {
+          return { ...item, quantity: item.quantity - 1 };
         }
-        return item;
-      })
-    );
+      }
+      return item;
+    }));
   };
 
   const removeFromCart = (id, size) => {
-    setCart(prevCart => prevCart.filter(item => !(item.id === id && item.size === size)));
+    setCart(cart.filter(item => !(item.id === id && item.size === size)));
   };
 
   const clearCart = () => {
@@ -93,35 +80,24 @@ const App = () => {
   };
 
   return (
-    <Router>
-      <div style={{ position: 'relative', minHeight: '100vh' }}>
+    /* ЖЕСТКИЙ ФИКС: Вшили basename прямо в корень App для GitHub Pages */
+    <BrowserRouter basename="/MyProjectStor">
+      <div className="app-wrapper">
+        <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} favCount={favorites.length} />
         
-        {/* ПРЕЛОАДЕР: рендерится поверх сайта и плавно тает по классу --hidden */}
-        <div className={`preloader ${!isLoading ? 'preloader--hidden' : ''}`}>
-          <div className="preloader__logo-box">
-            <img 
-              src="../src/assets/icons/stone-island-brands.svg" 
-              alt=''
-              className="preloader__logo"
-            />
-          </div>
-        </div>
+        <main className="main-content">
+          <Routes>
+            <Route path="/catalog/:catalogType" element={<Product searchQuery={searchQuery} favorites={favorites} toggleFavorite={toggleFavorite} />} />
+            <Route path="/product/:id" element={<ProductPage addToCart={addToCart} favorites={favorites} toggleFavorite={toggleFavorite} />} />
+            <Route path="/favorites" element={<Favorites favorites={favorites} toggleFavorite={toggleFavorite} />} />
+            <Route path="/cart" element={<Cart cart={cart} changeQuantity={changeQuantity} removeFromCart={removeFromCart} clearCart={clearCart} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
 
-        {/* ТВОЙ САЙТ: полностью готов и прогружен в фоне под прелоадером */}
-        <Header setSearchQuery={setSearchQuery} favorites={favorites} cart={cart} />
-        
-        <Routes>
-          <Route path="/" element={<Navigate to="/catalog/clothing" replace />} />
-          <Route path="/catalog/:catalogType" element={<Product searchQuery={searchQuery} favorites={favorites} toggleFavorite={toggleFavorite} />} />
-          <Route path="/product/:id" element={<ProductPage addToCart={addToCart} />} />
-          <Route path="/brands" element={<Brand />} />
-          <Route path="/favorites" element={<Favorites favorites={favorites} toggleFavorite={toggleFavorite} />} />
-          <Route path="/cart" element={<Cart cart={cart} changeQuantity={changeQuantity} removeFromCart={removeFromCart} clearCart={clearCart} />} />
-        </Routes>
-        
         <Footer />
       </div>
-    </Router>
+    </BrowserRouter>
   );
 };
 
